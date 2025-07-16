@@ -9,7 +9,7 @@ function UserProfile(props) {
       boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
     }}>
       <h2 style={{
-        color: '#3498db',
+        color: 'blue', // Added the requested "blue" color
         marginTop: '0',
         borderBottom: '1px solid #eee',
         paddingBottom: '10px'
