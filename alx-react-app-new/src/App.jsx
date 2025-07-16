@@ -1,3 +1,4 @@
+import Counter from './components/Counter';
 import UserProfile from './UserProfile';
 import Header from './Header';
 import MainContent from './MainContent';
@@ -14,6 +15,9 @@ function App() {
   return (
     
     <>
+    <div className="App">
+      <Counter />
+    </div>
     <UserProfile name="Alice" age="25" bio="Loves hiking and photography" />
     <Header />
     <MainContent />
