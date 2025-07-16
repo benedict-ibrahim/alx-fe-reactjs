@@ -13,6 +13,13 @@ function MainContent() {
         borderBottom: '2px solid #3498db',
         paddingBottom: '10px'
       }}>Featured Cities</h2>
+      
+      <p style={{
+        color: '#555',
+        lineHeight: '1.6',
+        marginBottom: '20px'
+      }}>I love to visit New York, Paris, and Tokyo.</p>
+      
       <ul style={{
         listStyleType: 'none',
         padding: '0'
