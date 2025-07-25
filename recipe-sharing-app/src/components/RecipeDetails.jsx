@@ -1,10 +1,11 @@
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import useRecipeStore from '../store/recipeStore'
+import FavoriteButton from './FavoriteButton'
 
 const RecipeDetails = () => {
   const { id } = useParams()
   const recipeId = parseInt(id)
-  const recipe = useRecipeStore((state) =>
+  const recipe = useRecipeStore(state =>
     state.recipes.find((recipe) => recipe.id === recipeId)
   )
 
@@ -14,16 +15,12 @@ const RecipeDetails = () => {
 
   return (
     <div className="recipe-details">
-      <h1>{recipe.title}</h1>
-      <p>{recipe.description}</p>
-      <div className="recipe-actions">
-        <Link to={`/edit/${recipe.id}`} className="edit-button">
-          Edit Recipe
-        </Link>
-        <Link to="/" className="back-button">
-          Back to Recipes
-        </Link>
+      <div className="recipe-header">
+        <h1>{recipe.title}</h1>
+        <FavoriteButton recipeId={recipe.id} />
       </div>
+      <p>{recipe.description}</p>
+      {/* Rest of your recipe details */}
     </div>
   )
 }

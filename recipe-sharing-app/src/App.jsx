@@ -6,6 +6,8 @@ import RecipeDetails from './components/RecipeDetails'
 import EditRecipeForm from './components/EditRecipeForm'
 import SearchBar from './components/SearchBar'
 import FilterPanel from './components/FilterPanel'
+import FavoritesList from './components/FavoritesList'
+import RecommendationsList from './components/RecommendationsList'
 
 function App() {
   return (
@@ -22,13 +24,19 @@ function App() {
                 <FilterPanel />
               </div>
               <AddRecipeForm />
+              <RecommendationsList />
               <RecipeList />
             </>
           } />
+          <Route path="/favorites" element={<FavoritesList />} />
           <Route path="/recipe/:id" element={<RecipeDetails />} />
           <Route path="/edit/:id" element={<EditRecipeForm />} />
         </Routes>
       </main>
+      <nav className="main-nav">
+        <a href="/">Home</a>
+        <a href="/favorites">My Favorites</a>
+      </nav>
     </div>
   )
 }
