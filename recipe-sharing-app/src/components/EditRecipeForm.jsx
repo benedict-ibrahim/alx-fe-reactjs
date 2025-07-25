@@ -21,8 +21,8 @@ const EditRecipeForm = () => {
     }
   }, [recipe])
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = (event) => {
+    event.preventDefault() // This prevents the default form submission behavior
     if (!title.trim() || !description.trim()) return
 
     updateRecipe(recipeId, { title, description })
