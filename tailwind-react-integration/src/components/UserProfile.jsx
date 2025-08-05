@@ -7,13 +7,13 @@ function UserProfile() {
       <img 
         src="https://via.placeholder.com/150" 
         alt="User" 
-        className="rounded-full w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 mx-auto"
+        className="rounded-full sm:p-4 w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 mx-auto"
       />
-      <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl 
+      <h1 className="text-base sm:text-lg sm:p-4 md:text-xl lg:text-2xl 
                      text-blue-800 my-2 sm:my-3 md:my-4 lg:my-5">
         John Doe
       </h1>
-      <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-600">
+      <p className="text-xs sm:text-sm sm:p-4 md:text-base lg:text-lg text-gray-600">
         Developer at Example Co. Loves to write code and explore new technologies.
       </p>
     </div>
