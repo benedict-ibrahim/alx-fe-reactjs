@@ -6,26 +6,27 @@ const AddRecipeForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     summary: '',
-    image: '',
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
     ingredients: '',
-    instructions: '',
+    steps: '', // Explicit steps field
     cookingTime: '',
     servings: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
+    // Proper target.value destructuring
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    });
-    // Clear error when user types
+    }));
     if (errors[name]) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         [name]: null
-      });
+      }));
     }
   };
 
@@ -34,170 +35,198 @@ const AddRecipeForm = () => {
     if (!formData.title.trim()) newErrors.title = 'Recipe title is required';
     if (!formData.summary.trim()) newErrors.summary = 'Summary is required';
     if (!formData.ingredients.trim()) newErrors.ingredients = 'Ingredients are required';
-    if (!formData.instructions.trim()) newErrors.instructions = 'Instructions are required';
+    if (!formData.steps.trim()) newErrors.steps = 'Cooking steps are required'; // Steps validation
     if (!formData.cookingTime.trim()) newErrors.cookingTime = 'Cooking time is required';
     if (!formData.servings.trim()) newErrors.servings = 'Servings is required';
     
-    // Additional validation for ingredients format
-    if (formData.ingredients.trim() && formData.ingredients.split('\n').filter(i => i.trim()).length < 2) {
+    if (formData.ingredients.trim() && 
+        formData.ingredients.split('\n').filter(i => i.trim()).length < 2) {
       newErrors.ingredients = 'Please enter at least 2 ingredients';
+    }
+
+    if (formData.steps.trim() && 
+        formData.steps.split('\n').filter(s => s.trim()).length < 2) {
+      newErrors.steps = 'Please enter at least 2 cooking steps';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Process form data
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
       const newRecipe = {
         ...formData,
-        id: Date.now(), // Temporary ID
-        ingredients: formData.ingredients.split('\n').filter(i => i.trim()),
-        instructions: formData.instructions.split('\n').filter(i => i.trim())
+        id: Date.now(),
+        ingredients: formData.ingredients.split('\n').map(i => i.trim()).filter(i => i),
+        steps: formData.steps.split('\n').map(s => s.trim()).filter(s => s), // Explicit steps processing
+        servings: parseInt(formData.servings)
       };
       
-      // In a real app, you would send this to your backend API
-      console.log('New recipe:', newRecipe);
-      
-      // For now, just navigate back to home
-      navigate('/');
+      console.log('Submitted recipe:', newRecipe);
+      navigate('/', { state: { recipeAdded: true } });
+    } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold text-center mb-8">Add New Recipe</h1>
+      <h1 className="text-3xl font-bold text-center mb-8">Share Your Recipe</h1>
       
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6">
+        {/* Title */}
         <div className="mb-6">
-          <label htmlFor="title" className="block text-gray-700 font-medium mb-2">
-            Recipe Title *
+          <label className="block text-gray-700 font-medium mb-2">
+            Recipe Title <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            id="title"
             name="title"
             value={formData.title}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.title ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
-            placeholder="e.g. Spaghetti Carbonara"
+            onChange={handleChange} // Using target.value via handleChange
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.title ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder="e.g. Grandma's Chocolate Chip Cookies"
           />
           {errors.title && <p className="mt-1 text-red-500 text-sm">{errors.title}</p>}
         </div>
 
+        {/* Summary */}
         <div className="mb-6">
-          <label htmlFor="summary" className="block text-gray-700 font-medium mb-2">
-            Short Summary *
+          <label className="block text-gray-700 font-medium mb-2">
+            Short Description <span className="text-red-500">*</span>
           </label>
           <textarea
-            id="summary"
             name="summary"
             value={formData.summary}
             onChange={handleChange}
             rows="2"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.summary ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
-            placeholder="Brief description of your recipe"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.summary ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder="What makes this recipe special?"
           />
           {errors.summary && <p className="mt-1 text-red-500 text-sm">{errors.summary}</p>}
         </div>
 
+        {/* Image URL */}
         <div className="mb-6">
-          <label htmlFor="image" className="block text-gray-700 font-medium mb-2">
+          <label className="block text-gray-700 font-medium mb-2">
             Image URL
           </label>
           <input
             type="url"
-            id="image"
             name="image"
             value={formData.image}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
-            placeholder="https://example.com/recipe-image.jpg"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+            placeholder="https://example.com/recipe-photo.jpg"
           />
         </div>
 
+        {/* Cooking Time & Servings */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label htmlFor="cookingTime" className="block text-gray-700 font-medium mb-2">
-              Cooking Time *
+            <label className="block text-gray-700 font-medium mb-2">
+              Cooking Time <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="cookingTime"
               name="cookingTime"
               value={formData.cookingTime}
               onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.cookingTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
-              placeholder="e.g. 30 mins"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.cookingTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+              }`}
+              placeholder="e.g. 45 minutes"
             />
             {errors.cookingTime && <p className="mt-1 text-red-500 text-sm">{errors.cookingTime}</p>}
           </div>
 
           <div>
-            <label htmlFor="servings" className="block text-gray-700 font-medium mb-2">
-              Servings *
+            <label className="block text-gray-700 font-medium mb-2">
+              Servings <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
-              id="servings"
               name="servings"
               value={formData.servings}
               onChange={handleChange}
               min="1"
-              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.servings ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.servings ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+              }`}
               placeholder="e.g. 4"
             />
             {errors.servings && <p className="mt-1 text-red-500 text-sm">{errors.servings}</p>}
           </div>
         </div>
 
+        {/* Ingredients */}
         <div className="mb-6">
-          <label htmlFor="ingredients" className="block text-gray-700 font-medium mb-2">
-            Ingredients * (one per line)
+          <label className="block text-gray-700 font-medium mb-2">
+            Ingredients <span className="text-red-500">*</span>
           </label>
           <textarea
-            id="ingredients"
             name="ingredients"
             value={formData.ingredients}
             onChange={handleChange}
             rows="5"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.ingredients ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
-            placeholder={`1 cup flour\n2 eggs\n1 tsp salt`}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.ingredients ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder={`2 cups all-purpose flour\n1 tsp baking soda\n1 cup chocolate chips`}
           />
           {errors.ingredients && <p className="mt-1 text-red-500 text-sm">{errors.ingredients}</p>}
         </div>
 
-        <div className="mb-6">
-          <label htmlFor="instructions" className="block text-gray-700 font-medium mb-2">
-            Instructions * (one step per line)
+        {/* Steps */}
+        <div className="mb-8">
+          <label className="block text-gray-700 font-medium mb-2">
+            Cooking Steps <span className="text-red-500">*</span>
           </label>
           <textarea
-            id="instructions"
-            name="instructions"
-            value={formData.instructions}
+            name="steps" // Explicit steps field
+            value={formData.steps}
             onChange={handleChange}
-            rows="5"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${errors.instructions ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'}`}
-            placeholder={`Preheat oven to 350°F\nMix dry ingredients\nAdd wet ingredients`}
+            rows="6"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.steps ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder={`1. Preheat oven to 375°F (190°C)\n2. Mix dry ingredients in a bowl\n3. Add wet ingredients and stir until combined`}
           />
-          {errors.instructions && <p className="mt-1 text-red-500 text-sm">{errors.instructions}</p>}
+          {errors.steps && <p className="mt-1 text-red-500 text-sm">{errors.steps}</p>}
         </div>
 
-        <div className="flex justify-end space-x-4">
+        {/* Form Actions */}
+        <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+            disabled={isSubmitting}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className={`px-6 py-3 rounded-lg font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isSubmitting 
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-200'
+            }`}
+            disabled={isSubmitting}
           >
-            Submit Recipe
+            {isSubmitting ? 'Submitting...' : 'Share Recipe'}
           </button>
         </div>
       </form>
