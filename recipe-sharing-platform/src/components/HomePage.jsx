@@ -1,93 +1,237 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const HomePage = () => {
-  const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const AddRecipeForm = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    title: '',
+    summary: '',
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
+    ingredients: '',
+    steps: '', // Explicit steps field
+    cookingTime: '',
+    servings: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        const response = await fetch('/data.json');
-        const data = await response.json();
-        setRecipes(data);
-      } catch (err) {
-        setError('Failed to load recipes');
-        console.error('Error fetching recipes:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleChange = (e) => {
+    // Proper target.value destructuring
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
+    }
+  };
 
-    fetchRecipes();
-  }, []);
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.title.trim()) newErrors.title = 'Recipe title is required';
+    if (!formData.summary.trim()) newErrors.summary = 'Summary is required';
+    if (!formData.ingredients.trim()) newErrors.ingredients = 'Ingredients are required';
+    if (!formData.steps.trim()) newErrors.steps = 'Cooking steps are required'; // Steps validation
+    if (!formData.cookingTime.trim()) newErrors.cookingTime = 'Cooking time is required';
+    if (!formData.servings.trim()) newErrors.servings = 'Servings is required';
+    
+    if (formData.ingredients.trim() && 
+        formData.ingredients.split('\n').filter(i => i.trim()).length < 2) {
+      newErrors.ingredients = 'Please enter at least 2 ingredients';
+    }
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+    if (formData.steps.trim() && 
+        formData.steps.split('\n').filter(s => s.trim()).length < 2) {
+      newErrors.steps = 'Please enter at least 2 cooking steps';
+    }
 
-  if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">
-        {error} - <button 
-          onClick={() => window.location.reload()} 
-          className="text-blue-500 hover:underline"
-        >
-          Try again
-        </button>
-      </div>
-    );
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const newRecipe = {
+        ...formData,
+        id: Date.now(),
+        ingredients: formData.ingredients.split('\n').map(i => i.trim()).filter(i => i),
+        steps: formData.steps.split('\n').map(s => s.trim()).filter(s => s), // Explicit steps processing
+        servings: parseInt(formData.servings)
+      };
+      
+      console.log('Submitted recipe:', newRecipe);
+      navigate('/', { state: { recipeAdded: true } });
+    } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">Delicious Recipes</h1>
-      <div className="flex justify-between items-center mb-8">
-  <h1 className="text-3xl font-bold text-gray-800">Delicious Recipes</h1>
-  <Link
-    to="/add-recipe"
-    className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-    </svg>
-    Add Recipe
-  </Link>
-</div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {recipes.map((recipe) => (
-          <Link 
-            to={`/recipe/${recipe.id}`} 
-            key={recipe.id}
-            className="block transition-transform hover:scale-[1.02]"
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <h1 className="text-3xl font-bold text-center mb-8">Share Your Recipe</h1>
+      
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6">
+        {/* Title */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Recipe Title <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange} // Using target.value via handleChange
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.title ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder="e.g. Grandma's Chocolate Chip Cookies"
+          />
+          {errors.title && <p className="mt-1 text-red-500 text-sm">{errors.title}</p>}
+        </div>
+
+        {/* Summary */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Short Description <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="summary"
+            value={formData.summary}
+            onChange={handleChange}
+            rows="2"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.summary ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder="What makes this recipe special?"
+          />
+          {errors.summary && <p className="mt-1 text-red-500 text-sm">{errors.summary}</p>}
+        </div>
+
+        {/* Image URL */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Image URL
+          </label>
+          <input
+            type="url"
+            name="image"
+            value={formData.image}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200"
+            placeholder="https://example.com/recipe-photo.jpg"
+          />
+        </div>
+
+        {/* Cooking Time & Servings */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Cooking Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="cookingTime"
+              value={formData.cookingTime}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.cookingTime ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+              }`}
+              placeholder="e.g. 45 minutes"
+            />
+            {errors.cookingTime && <p className="mt-1 text-red-500 text-sm">{errors.cookingTime}</p>}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">
+              Servings <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="servings"
+              value={formData.servings}
+              onChange={handleChange}
+              min="1"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.servings ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+              }`}
+              placeholder="e.g. 4"
+            />
+            {errors.servings && <p className="mt-1 text-red-500 text-sm">{errors.servings}</p>}
+          </div>
+        </div>
+
+        {/* Ingredients */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Ingredients <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="ingredients"
+            value={formData.ingredients}
+            onChange={handleChange}
+            rows="5"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.ingredients ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder={`2 cups all-purpose flour\n1 tsp baking soda\n1 cup chocolate chips`}
+          />
+          {errors.ingredients && <p className="mt-1 text-red-500 text-sm">{errors.ingredients}</p>}
+        </div>
+
+        {/* Steps */}
+        <div className="mb-8">
+          <label className="block text-gray-700 font-medium mb-2">
+            Cooking Steps <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="steps" // Explicit steps field
+            value={formData.steps}
+            onChange={handleChange}
+            rows="6"
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+              errors.steps ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200'
+            }`}
+            placeholder={`1. Preheat oven to 375°F (190°C)\n2. Mix dry ingredients in a bowl\n3. Add wet ingredients and stir until combined`}
+          />
+          {errors.steps && <p className="mt-1 text-red-500 text-sm">{errors.steps}</p>}
+        </div>
+
+        {/* Form Actions */}
+        <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+            disabled={isSubmitting}
           >
-            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-              <img 
-                src={recipe.image} 
-                alt={recipe.title} 
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4 flex flex-col flex-grow">
-                <h2 className="text-xl font-semibold mb-2 text-gray-800">{recipe.title}</h2>
-                <p className="text-gray-600 mb-4 flex-grow">{recipe.summary}</p>
-                <div className="flex justify-between items-center mt-auto">
-                  <span className="text-sm text-gray-500">⏱️ {recipe.cookingTime}</span>
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                    View Recipe
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={`px-6 py-3 rounded-lg font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              isSubmitting 
+                ? 'bg-blue-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-200'
+            }`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Share Recipe'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
 
-export default HomePage;
+export default AddRecipeForm;
