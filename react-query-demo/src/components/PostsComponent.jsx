@@ -15,15 +15,21 @@ const PostsComponent = () => {
     isError, 
     error,
     refetch,
-    isFetching
+    isFetching,
+    isPreviousData
   } = useQuery({
     queryKey: ['posts'],
     queryFn: fetchPosts,
-    staleTime: 10000, // Data is considered fresh for 10 seconds
+    staleTime: 10 * 1000, // 10 seconds until data becomes stale
+    cacheTime: 15 * 60 * 1000, // 15 minutes cache retention
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+    keepPreviousData: true, // Keep showing old data while fetching new
+    retry: 2, // Retry failed requests twice
+    retryDelay: attempt => Math.min(attempt * 1000, 3000) // Exponential backoff
   });
 
-  if (isLoading) {
-    return <div>Loading posts...</div>;
+  if (isLoading && !isPreviousData) {
+    return <div>Loading posts for the first time...</div>;
   }
 
   if (isError) {
@@ -37,13 +43,14 @@ const PostsComponent = () => {
         <button onClick={() => refetch()} disabled={isFetching}>
           {isFetching ? 'Refreshing...' : 'Refresh Posts'}
         </button>
-        <span className="cache-status">
-          {isFetching ? 'Updating...' : 'Data is cached'}
-        </span>
+        <div className="query-status">
+          {isFetching && <span>Background updating...</span>}
+          {isPreviousData && <span>Showing cached data while refreshing...</span>}
+        </div>
       </div>
       
       <div className="posts-list">
-        {posts.map(post => (
+        {posts?.map(post => (
           <div key={post.id} className="post-card">
             <h3>{post.title}</h3>
             <p>{post.body}</p>
