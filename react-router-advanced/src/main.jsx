@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import './index.css'
 
 // Import components
@@ -26,7 +27,11 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       {
         path: 'profile',
-        element: <ProtectedRoute><ProfileLayout /></ProtectedRoute>,
+        element: (
+          <ProtectedRoute>
+            <ProfileLayout />
+          </ProtectedRoute>
+        ),
         children: [
           { index: true, element: <ProfileDetails /> },
           { path: 'settings', element: <ProfileSettings /> }
@@ -39,6 +44,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 )
