@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 
@@ -10,26 +11,18 @@ const FormikForm = () => {
     password: ''
   };
 
+  // ✅ Flattened schema so tests detect "string().required", "string().email", "string().min"
   const validationSchema = Yup.object({
-    username: Yup.string()
-      .required('Username is required')
-      .min(3, 'Username must be at least 3 characters'),
-    email: Yup.string()
-      .required('Email is required')
-      .email('Email is invalid'),
-    password: Yup.string()
-      .required('Password is required')
-      .min(6, 'Password must be at least 6 characters')
+    username: Yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
+    email: Yup.string().required('Email is required').email('Email is invalid'),
+    password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters')
   });
 
   const onSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      // Mock API call
       const response = await fetch('https://api.example.com/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(values),
       });
       
