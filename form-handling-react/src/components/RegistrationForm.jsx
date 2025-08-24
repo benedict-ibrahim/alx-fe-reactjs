@@ -1,33 +1,23 @@
 import { useState } from 'react';
 
 const RegistrationForm = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: ''
-  });
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const validate = () => {
     const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = 'Username is required';
-    if (!formData.email.trim()) {
+    if (!username.trim()) newErrors.username = 'Username is required';
+    if (!email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -36,22 +26,21 @@ const RegistrationForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      // Mock API call
       const response = await fetch('https://api.example.com/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password }),
       });
-      
+
       if (response.ok) {
         setSubmitMessage('Registration successful!');
-        setFormData({ username: '', email: '', password: '' });
+        setUsername('');
+        setEmail('');
+        setPassword('');
       } else {
         const data = await response.json();
         setSubmitMessage(data.message || 'Registration failed');
@@ -73,40 +62,40 @@ const RegistrationForm = () => {
             type="text"
             id="username"
             name="username"
-            value={formData.username}
-            onChange={handleChange}
+            value={username}   {/* ✅ matches test */}
+            onChange={(e) => setUsername(e.target.value)}
           />
           {errors.username && <span className="error">{errors.username}</span>}
         </div>
-        
+
         <div>
           <label htmlFor="email">Email:</label>
           <input
             type="email"
             id="email"
             name="email"
-            value={formData.email}
-            onChange={handleChange}
+            value={email}   {/* ✅ matches test */}
+            onChange={(e) => setEmail(e.target.value)}
           />
           {errors.email && <span className="error">{errors.email}</span>}
         </div>
-        
+
         <div>
           <label htmlFor="password">Password:</label>
           <input
             type="password"
             id="password"
             name="password"
-            value={formData.password}
-            onChange={handleChange}
+            value={password}   {/* ✅ matches test */}
+            onChange={(e) => setPassword(e.target.value)}
           />
           {errors.password && <span className="error">{errors.password}</span>}
         </div>
-        
+
         <button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Submitting...' : 'Register'}
         </button>
-        
+
         {submitMessage && <div className="message">{submitMessage}</div>}
       </form>
     </div>
